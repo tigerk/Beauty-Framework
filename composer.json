@@ -12,15 +12,10 @@
     },
     "autoload": {
         "classmap": [
-          "Beauty",
-          "app"
-        ],
-        "exclude-from-classmap" : [
-          "app/config"
+          "src"
         ],
         "files": [
-          "Beauty/Bootstrap.php",
-          "app/helper.php"
+          "src/Bootstrap.php"
         ]
     }
 }
