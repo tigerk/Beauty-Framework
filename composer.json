@@ -13,9 +13,6 @@
     "autoload": {
         "classmap": [
           "src"
-        ],
-        "files": [
-          "src/Bootstrap.php"
         ]
     }
 }
