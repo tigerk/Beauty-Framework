@@ -10,7 +10,6 @@
 
 namespace Beauty\Core;
 
-use Beauty\Config;
 use Beauty\Exception\FilterException;
 use Beauty\Exception\MethodNotFoundException;
 use Beauty\Exception\RouteNotFoundException;
