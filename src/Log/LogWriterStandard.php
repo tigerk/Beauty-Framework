@@ -1,5 +1,7 @@
 <?php
 
+namespace Beauty\Log;
+
 /**
  * 输出日志到标准输出
  */

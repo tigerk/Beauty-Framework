@@ -3,6 +3,8 @@
 namespace Beauty\Database\Connector;
 
 
+use Beauty\Core\App;
+
 class MysqlConnector
 {
     CONST QUERY_MASTER_CHANNEL = "master";
@@ -24,7 +26,7 @@ class MysqlConnector
 
     function __construct()
     {
-        $this->connectionsSettings = \Beauty\App::config()->get('database');
+        $this->connectionsSettings = App::config()->get('database');
     }
 
     /**

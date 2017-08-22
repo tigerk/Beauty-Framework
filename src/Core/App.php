@@ -8,7 +8,16 @@
  * @package Beauty
  */
 
-namespace Beauty;
+namespace Beauty\Core;
+
+use Beauty\Config;
+use Beauty\Exception\FilterException;
+use Beauty\Exception\MethodNotFoundException;
+use Beauty\Exception\RouteNotFoundException;
+use Beauty\Http\Environment;
+use Beauty\Http\Request;
+use Beauty\Http\Response;
+use Beauty\Router\Router;
 
 class App
 {
@@ -46,10 +55,10 @@ class App
     {
         $this->basePath    = $basePath;
         $this->config      = new Config();
-        $this->environment = new Http\Environment($_SERVER);
-        $this->router      = new Router\Router();
-        $this->request     = new Http\Request($this->environment);
-        $this->response    = new Http\Response();
+        $this->environment = new Environment($_SERVER);
+        $this->router      = new Router();
+        $this->request     = new Request($this->environment);
+        $this->response    = new Response();
 
         $this->initialize();
 
@@ -98,12 +107,12 @@ class App
     /**
      * Dispatch request and build response
      */
-    protected function dispatchRequest(Http\Request $request, Http\Response $response)
+    protected function dispatchRequest(Request $request, Response $response)
     {
         $route = $this->router->getMatchedRoutes($request->getMethod(), $request->getPathInfo(), false);
 
         if (is_null($route)) {
-            throw new \RouteNotFoundException("uri path not found allowed method!");
+            throw new RouteNotFoundException("uri path not found allowed method!");
         }
 
         $filtered   = true;
@@ -113,7 +122,7 @@ class App
         }
 
         if (!$filtered) {
-            throw new \FilterException("uri filter not allowed!");
+            throw new FilterException("uri filter not allowed!");
         }
 
         /**
@@ -154,7 +163,7 @@ class App
      * @param $method
      * @param $parameters
      * @return mixed
-     * @throws \MethodNotFoundException
+     * @throws MethodNotFoundException
      */
     public static function __callStatic($method, $parameters)
     {
@@ -162,7 +171,7 @@ class App
             return self::$_instance->$method;
         }
 
-        throw new \MethodNotFoundException('method not found!');
+        throw new MethodNotFoundException('method not found!');
     }
 
     public function instance($ins)

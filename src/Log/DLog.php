@@ -1,6 +1,8 @@
 <?php
 
-use Beauty\Config;
+namespace Beauty\Log;
+
+use Beauty\Core\Config;
 
 /*********************************************
  * format string，取自lighttpd文档
@@ -624,7 +626,7 @@ class DLog
             $code = $code . ' . ' . $action[$i - 1] . ' . ' . var_export($strformat[$i], true);
         }
         $code .= ' . "\n"';
-        $pre = implode("\n", $prelim);
+        $pre  = implode("\n", $prelim);
 
         $cmt = "Used for app " . self::getLastLogger() . "\n";
         $cmt .= "Original format string: " . str_replace('*/', '* /', $format);

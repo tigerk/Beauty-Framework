@@ -6,7 +6,7 @@
 
 namespace Beauty\Cache;
 
-use Beauty\App;
+use Beauty\Core\App;
 use Beauty\Lib\HashRing;
 use Memcached;
 

@@ -1,6 +1,8 @@
 <?php
 
-class RouteNotFoundException extends Exception
+namespace Beauty\Exception;
+
+class RouteNotFoundException extends \Exception
 {
 
 }

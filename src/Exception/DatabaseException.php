@@ -1,6 +1,8 @@
 <?php
 
-class DatabaseException extends Exception
+namespace Beauty\Exception;
+
+class DatabaseException extends \Exception
 {
 
 }

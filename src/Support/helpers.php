@@ -7,7 +7,7 @@
  */
 function handleException(Throwable $e)
 {
-    DLog::fatal(var_export($e, true), 0, []);
+    \Beauty\Log\DLog::fatal(var_export($e, true), 0, []);
 }
 
 /**
@@ -17,7 +17,7 @@ function handleException(Throwable $e)
 if (!function_exists('base_path')) {
     function base_path()
     {
-        return \Beauty\App::basePath();
+        return \Beauty\Core\App::basePath();
     }
 }
 

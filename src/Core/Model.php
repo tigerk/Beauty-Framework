@@ -1,6 +1,6 @@
 <?php
 
-namespace Beauty\Model;
+namespace Beauty\Core;
 
 use Beauty\Database\Dao;
 

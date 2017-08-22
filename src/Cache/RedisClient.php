@@ -6,8 +6,7 @@
 
 namespace Beauty\Cache;
 
-use Beauty\App;
-use Beauty\Cache;
+use Beauty\Core\App;
 use Beauty\Lib\HashRing;
 
 class RedisClient

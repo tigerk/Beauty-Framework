@@ -1,6 +1,8 @@
 <?php
 
-namespace Beauty;
+namespace Beauty\Core;
+
+use Beauty\Exception\FileNotFoundException;
 
 /**
  * 获取配置参数
@@ -30,7 +32,7 @@ class Config implements \ArrayAccess
      * @param  string $path
      * @return mixed
      *
-     * @throws \FileNotFoundException
+     * @throws FileNotFoundException
      */
     public function getRequire($path)
     {
@@ -38,7 +40,7 @@ class Config implements \ArrayAccess
             return require $path;
         }
 
-        throw new \FileNotFoundException("File does not exist at path {$path}");
+        throw new FileNotFoundException("File does not exist at path {$path}");
     }
 
     public function has($key)

@@ -1,6 +1,8 @@
 <?php
 
-class FilterException extends Exception
+namespace Beauty\Exception;
+
+class FilterException extends \Exception
 {
 
 }

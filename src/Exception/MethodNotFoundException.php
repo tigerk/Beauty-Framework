@@ -1,6 +1,8 @@
 <?php
 
-class MethodNotFoundException extends Exception
+namespace Beauty\Exception;
+
+class MethodNotFoundException extends \Exception
 {
 
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Beauty;
+namespace Beauty\Core;
 
 class Controller
 {

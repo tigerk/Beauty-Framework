@@ -1,6 +1,8 @@
 <?php
 
-class FileNotFoundException extends Exception
+namespace Beauty\Exception;
+
+class FileNotFoundException extends \Exception
 {
 
 }
