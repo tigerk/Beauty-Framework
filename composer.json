@@ -2,8 +2,20 @@
     "name": "beauty/framework",
     "description": "The beauty Framework.",
     "keywords": ["framework", "beauty"],
+    "type": "library",
     "license": "MIT",
+    "authors": [
+        {
+            "name": "tigerk",
+            "email": "kimhwawoon@gmail.com"
+        }
+    ],
     "require": {
         "php": ">=7.1.0"
+    },
+    "autoload": {
+      "psr-4": {
+        "Beauty\\": "src/"
+      }
     }
 }
