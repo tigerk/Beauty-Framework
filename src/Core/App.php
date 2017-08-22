@@ -137,7 +137,7 @@ class App
 
         $callable = null;
         $matches  = array();
-        if (is_string($lostrcallable) && preg_match('!^([a-zA-Z0-9]+)\@([a-zA-Z0-9]+)$!', $lostrcallable, $matches)) {
+        if (is_string($lostrcallable) && preg_match('!^([\a-zA-Z0-9]+)\@([a-zA-Z0-9]+)$!', $lostrcallable, $matches)) {
             $class  = $matches[1];
             $method = $matches[2];
 
