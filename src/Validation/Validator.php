@@ -8,7 +8,7 @@
 
 namespace Beauty\Validation;
 
-use Beauty\App;
+use Beauty\Core\App;
 
 /**
  * Validation Class
