@@ -38,7 +38,7 @@ class App
 
     protected $allowed = true;
 
-    protected $basePath;
+    static $_basePath;
     /**
      * App instance
      *
@@ -52,7 +52,10 @@ class App
      */
     public function __construct($basePath)
     {
-        $this->basePath    = $basePath;
+        /**
+         * App中记录base path;
+         */
+        self::$_basePath   = $basePath;
         $this->config      = new Config();
         $this->environment = new Environment($_SERVER);
         $this->router      = new Router();

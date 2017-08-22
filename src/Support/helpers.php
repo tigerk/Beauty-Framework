@@ -17,7 +17,7 @@ function handleException(Throwable $e)
 if (!function_exists('base_path')) {
     function base_path()
     {
-        return \Beauty\Core\App::basePath();
+        return \Beauty\Core\App::$_basePath;
     }
 }
 
