@@ -30,6 +30,7 @@ class App
 
     protected $allowed = true;
 
+    protected $basePath;
     /**
      * App instance
      *
@@ -39,10 +40,11 @@ class App
 
     /**
      * initialize App
-     * @param array $userSettings
+     * @param array $basePath
      */
-    public function __construct(array $userSettings = array())
+    public function __construct($basePath)
     {
+        $this->basePath    = $basePath;
         $this->config      = new Config();
         $this->environment = new Http\Environment($_SERVER);
         $this->router      = new Router\Router();
