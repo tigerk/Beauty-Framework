@@ -48,7 +48,7 @@ class App
 
     /**
      * initialize App
-     * @param array $basePath
+     * @param string $basePath
      */
     public function __construct($basePath)
     {
