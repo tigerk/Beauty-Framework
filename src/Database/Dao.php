@@ -88,18 +88,21 @@ abstract class Dao
      * @var int
      */
     public static $totalPages = 0;
+
     /**
-     * An array that holds insert/update/select errors
+     * 记录insert/update/select错误
      *
      * @var array
      */
     public $errors = null;
+
     /**
-     * Primary key for an object. 'id' is a default value.
+     * 主键，默认为id
      *
      * @var string
      */
     protected $primaryKey = 'id';
+
     /**
      * Table name for an object. Class name will be used by default
      *
@@ -108,18 +111,25 @@ abstract class Dao
     protected $dbTable;
 
     /**
-     * current table connection name.
+     * 当前连接数据库的配置名称
      *
      * @var string
      */
     protected $connection = "default";
 
     /**
-     * current connection channel, master or slave
+     * 当前链接数据库的渠道, master or slave
      *
      * @var string
      */
     protected $channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
+
+    /**
+     * 查询字段，默认为所有字段
+     *
+     * @var string
+     */
+    protected $fields;
 
     /**
      * The hook event.
@@ -129,9 +139,12 @@ abstract class Dao
     protected static $hooks;
 
     /**
-     * @param array $data Data to preload on object creation
+     * 创建对象必须设置dbTable（表名字）
+     *
+     * Dao constructor.
+     * @throws \Exception
      */
-    public function __construct($data = null)
+    public function __construct()
     {
         if (empty ($this->dbTable)) {
             throw new \Exception("you must confirm table name.");
@@ -139,20 +152,18 @@ abstract class Dao
 
         static::booting();
 
-        if ($data) {
-            $this->data = $data;
-        }
-
         $this->dbClient = MysqlClient::getInstance($this->connection);
     }
 
-
+    /**
+     * 启动钩子的入口函数
+     */
     protected static function booting()
     {
     }
 
     /**
-     * Register a created model event
+     * 注册插入后的回调函数
      *
      * @param  \Closure|string $callback
      * @return void
@@ -165,7 +176,7 @@ abstract class Dao
     }
 
     /**
-     * Register a created model event
+     * 注册更新后的回调
      *
      * @param  \Closure|string $callback
      * @return void
@@ -177,13 +188,19 @@ abstract class Dao
         self::addHooks("model.{$name}.{$event}", $callback);
     }
 
+    /**
+     * 添加钩子
+     *
+     * @param $event
+     * @param $callback
+     */
     protected static function addHooks($event, $callback)
     {
         self::$hooks[$event] = $callback;
     }
 
     /**
-     * Fire the given hook for the model.
+     * 启动该模型的钩子
      *
      * @param  string $event
      * @param  bool $halt
@@ -296,7 +313,20 @@ abstract class Dao
     }
 
     /**
-     * @return mixed insert id or false in case of failure
+     * 设置查询字段
+     *
+     * @param $fields
+     * @return $this
+     */
+    private function select($fields)
+    {
+        $this->fields = $fields;
+
+        return $this;
+    }
+
+    /**
+     * @return mixed 插入id or false in case of failure
      */
     public function insert()
     {
@@ -399,7 +429,7 @@ abstract class Dao
     }
 
     /**
-     * Get object by primary key.
+     * 根据主键查找对象
      *
      * @access public
      * @param $id string Primary Key
@@ -407,27 +437,27 @@ abstract class Dao
      *
      * @return Dao
      */
-    private function find($id, $fields = null)
+    private function find($id)
     {
         $this->dbClient->where($this->dbTable . '.' . $this->primaryKey, $id);
 
-        return $this->getOne($fields);
+        return $this->getOne();
     }
 
     /**
      * convenient function to fetch one object. Mostly will be together with where()
      *
      * @access public
-     * @param array|string $fields Array or coma separated list of fields to fetch
      *
      * @return Dao
      */
-    protected function getOne($fields = null)
+    protected function getOne()
     {
         $this->dbClient->setQueryChannel($this->channel);
-        $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $fields);
-        if ($this->dbClient->count == 0)
+        $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $this->fields);
+        if ($this->dbClient->count == 0) {
             return null;
+        }
 
         $this->processArrays($results);
         $this->data = $results;
@@ -439,20 +469,19 @@ abstract class Dao
     }
 
     /**
-     * Fetch all objects
+     * 获取查询内容，以数组形式返回，数据内为Object。
      *
      * @access public
      * @param integer|array $limit Array to define SQL limit in format Array ($count, $offset)
      *                             or only $count
-     * @param array|string $fields Array or coma separated list of fields to fetch
      *
      * @return array Array of Clients
      */
-    protected function get($limit = null, $fields = null)
+    protected function get($limit = null)
     {
         $this->dbClient->setQueryChannel($this->channel);
 
-        $results = $this->dbClient->arrayBuilder()->get($this->dbTable, $limit, $fields);
+        $results = $this->dbClient->arrayBuilder()->get($this->dbTable, $limit, $this->fields);
         if ($this->dbClient->count == 0) {
             return null;
         }
@@ -466,7 +495,7 @@ abstract class Dao
             $objects[]   = $item;
         }
 
-        $this->_with = [];
+        $this->_reset();
 
         return $objects;
     }
@@ -489,17 +518,17 @@ abstract class Dao
     }
 
     /**
-     * Pagination wraper to get()
+     * 分页函数
      *
      * @access public
      * @param int $page Page number
      * @param array|string $fields Array or coma separated list of fields to fetch
      * @return array
      */
-    private function paginate($page, $fields = null)
+    private function paginate($page)
     {
         $this->dbClient->pageLimit = $this->pageLimit;
-        $res                       = $this->dbClient->paginate($this->dbTable, $page, $fields);
+        $res                       = $this->dbClient->paginate($this->dbTable, $page, $this->fields);
         self::$totalPages          = $this->dbClient->totalPages;
         if ($this->dbClient->count == 0) {
             return null;
@@ -514,87 +543,9 @@ abstract class Dao
             $objects[]   = $item;
         }
 
-        $this->_with = [];
+        $this->_reset();
 
         return $objects;
-    }
-
-    /**
-     * Catches calls to undefined methods.
-     *
-     * Provides magic access to private functions of the class and native public mysqlidb functions
-     *
-     * @param string $method
-     * @param mixed $arg
-     *
-     * @return mixed
-     */
-    public function __call($method, $arg)
-    {
-        if (method_exists($this, $method)) {
-            return call_user_func_array(array($this, $method), $arg);
-        }
-
-        call_user_func_array(array($this->dbClient, $method), $arg);
-
-        return $this;
-    }
-
-    /**
-     * Catches calls to undefined static methods.
-     *
-     * Transparently creating Client class to provide smooth API like name::get() name::orderBy()->get()
-     *
-     * @param string $method
-     * @param mixed $arg
-     *
-     * @return mixed
-     */
-    public static function __callStatic($method, $arg)
-    {
-        $obj    = new static;
-        $result = call_user_func_array(array($obj, $method), $arg);
-        if (method_exists($obj, $method)) {
-            return $result;
-        }
-
-        return $obj;
-    }
-
-    /**
-     * Converts object data to an associative array.
-     *
-     * @return array Converted data
-     */
-    public function toArray()
-    {
-        $data = $this->data;
-        foreach ($data as &$d) {
-            if ($d instanceof Dao)
-                $d = $d->data;
-        }
-
-        return $data;
-    }
-
-    /**
-     * Converts object data to a JSON string.
-     *
-     * @return string Converted data
-     */
-    public function toJson()
-    {
-        return json_encode($this->toArray());
-    }
-
-    /**
-     * Converts object data to a JSON string.
-     *
-     * @return string Converted data
-     */
-    public function __toString()
-    {
-        return $this->toJson();
     }
 
     /**
@@ -616,7 +567,10 @@ abstract class Dao
     }
 
     /**
-     * @param array $data
+     * 校验数据
+     *
+     * @param $data
+     * @return bool
      */
     private function validate($data)
     {
@@ -720,5 +674,95 @@ abstract class Dao
         }
 
         return $sqlData;
+    }
+
+    /**
+     * Catches calls to undefined methods.
+     *
+     * Provides magic access to private functions of the class and native public mysqlidb functions
+     *
+     * @param string $method
+     * @param mixed $arg
+     *
+     * @return mixed
+     */
+    public function __call($method, $arg)
+    {
+        if (method_exists($this, $method)) {
+            return call_user_func_array(array($this, $method), $arg);
+        }
+
+        call_user_func_array(array($this->dbClient, $method), $arg);
+
+        return $this;
+    }
+
+    /**
+     * Catches calls to undefined static methods.
+     *
+     * Transparently creating Client class to provide smooth API like name::get() name::orderBy()->get()
+     *
+     * @param string $method
+     * @param mixed $arg
+     *
+     * @return mixed
+     */
+    public static function __callStatic($method, $arg)
+    {
+        $obj    = new static;
+        $result = call_user_func_array(array($obj, $method), $arg);
+        if (method_exists($obj, $method)) {
+            return $result;
+        }
+
+        return $obj;
+    }
+
+    /**
+     * Converts object data to an associative array.
+     *
+     * @return array Converted data
+     */
+    public function toArray()
+    {
+        $data = $this->data;
+        foreach ($data as &$d) {
+            if ($d instanceof Dao)
+                $d = $d->data;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Converts object data to a JSON string.
+     *
+     * @return string Converted data
+     */
+    public function toJson()
+    {
+        return json_encode($this->toArray());
+    }
+
+    /**
+     * Converts object data to a JSON string.
+     *
+     * @return string Converted data
+     */
+    public function __toString()
+    {
+        return $this->toJson();
+    }
+
+    /**
+     * 查询后重置这些内容
+     *
+     * @access    private
+     * @return    void
+     */
+    function _reset()
+    {
+        $this->fields = null;
+        $this->_with  = [];
     }
 }
