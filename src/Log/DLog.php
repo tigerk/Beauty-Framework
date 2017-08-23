@@ -633,7 +633,7 @@ class DLog
 
         $md5val = md5($format);
         $func   = "_dlog_$md5val";
-        $str    = "<?php \n/*\n$cmt\n*/\nfunction $func() {\n$pre\nreturn $code;\n}";
+        $str    = "<?php\nuse Beauty\Log\Dlog;\n/*\n$cmt\n*/\nfunction $func() {\n$pre\nreturn $code;\n}";
 
         return $str;
     }
