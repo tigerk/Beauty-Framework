@@ -1,14 +1,6 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: tigerkim
- * Date: 2017/8/1
- * Time: 13:16
- */
 
 namespace Beauty\Validation;
-
-use Beauty\Core\App;
 
 /**
  * Validation Class
@@ -95,7 +87,7 @@ class Validator
      * @param  string $langDir
      * @throws \InvalidArgumentException
      */
-    public function __construct($data = array(), $fields = array(), $lang = null)
+    public function __construct($data = array(), $fields = array(), $lang = null, $langDir = null)
     {
         // Allows filtering of used input fields against optional second array of field names allowed
         // This is useful for limiting raw $_POST or $_GET data to only known fields
@@ -104,9 +96,17 @@ class Validator
         // set lang in the follow order: constructor param, static::$_lang, default to en
         $lang = $lang ?: static::lang();
 
+        // set langDir in the follow order: constructor param, static::$_langDir, default to package lang dir
+        $langDir = $langDir ?: static::langDir();
+
         // Load language file in directory
-        $langMessages          = App::config()->get("validation-{$lang}");
-        static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
+        $langFile = rtrim($langDir, '/') . '/' . $lang . '.php';
+        if (stream_resolve_include_path($langFile)) {
+            $langMessages          = include $langFile;
+            static::$_ruleMessages = array_merge(static::$_ruleMessages, $langMessages);
+        } else {
+            throw new \InvalidArgumentException("Fail to load language file '" . $langFile . "'");
+        }
     }
 
     /**
@@ -122,6 +122,21 @@ class Validator
         }
 
         return static::$_lang ?: 'zh-cn';
+    }
+
+    /**
+     * Get/set language file path
+     *
+     * @param  string $dir
+     * @return string
+     */
+    public static function langDir($dir = null)
+    {
+        if ($dir !== null) {
+            static::$_langDir = $dir;
+        }
+
+        return static::$_langDir ?: dirname(dirname(__DIR__)) . '/lang';
     }
 
     /**
@@ -552,6 +567,10 @@ class Validator
      */
     protected function validateSlug($field, $value)
     {
+        if (is_array($value)) {
+            return false;
+        }
+
         return preg_match('/^([-a-z0-9_-])+$/i', $value);
     }
 
@@ -878,6 +897,11 @@ class Validator
             return array($data, false);
         }
 
+        // Catches the case where the data isn't an array or object
+        if (is_scalar($data)) {
+            return array(NULL, false);
+        }
+
         $identifier = array_shift($identifiers);
 
         // Glob match
@@ -919,7 +943,11 @@ class Validator
                 // Don't validate if the field is not required and the value is empty
                 if ($this->hasRule('optional', $field) && isset($values)) {
                     //Continue with execution below if statement
-                } elseif ($v['rule'] !== 'required' && !$this->hasRule('required', $field) && (!isset($values) || $values === '' || ($multiple && count($values) == 0))) {
+                } elseif (
+                    $v['rule'] !== 'required' && !$this->hasRule('required', $field) &&
+                    $v['rule'] !== 'accepted' &&
+                    (!isset($values) || $values === '' || ($multiple && count($values) == 0))
+                ) {
                     continue;
                 }
 
@@ -1171,6 +1199,9 @@ class Validator
         foreach ($rules as $ruleType => $params) {
             if (is_array($params)) {
                 foreach ($params as $innerParams) {
+                    if (!is_array($innerParams)) {
+                        $innerParams = (array)$innerParams;
+                    }
                     array_unshift($innerParams, $ruleType);
                     call_user_func_array(array($this, 'rule'), $innerParams);
                 }
@@ -1185,7 +1216,7 @@ class Validator
      *
      * @param  array $data
      * @param  array $fields
-     * @return \Beauty\Validation\Validator
+     * @return \Valitron\Validator
      */
     public function withData($data, $fields = array())
     {
