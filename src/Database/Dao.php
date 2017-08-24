@@ -144,10 +144,14 @@ abstract class Dao
      * Dao constructor.
      * @throws \Exception
      */
-    public function __construct()
+    public function __construct($data = null)
     {
         if (empty ($this->dbTable)) {
             throw new \Exception("you must confirm table name.");
+        }
+
+        if ($data) {
+            $this->data = $data;
         }
 
         static::booting();
@@ -460,7 +464,6 @@ abstract class Dao
         }
 
         $this->processArrays($results);
-        $this->data = $results;
 
         $item        = new static($results);
         $item->isNew = false;
