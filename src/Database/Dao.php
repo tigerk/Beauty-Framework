@@ -601,33 +601,24 @@ abstract class Dao
                 $this->errors[] = Array($this->dbTable . "." . $key => "is required");
                 continue;
             }
-            if ($value == null)
+            if ($value == null) {
                 continue;
-
-            switch ($type) {
-                case "text";
-                    $regexp = null;
-                    break;
-                case "int":
-                    $regexp = "/^[0-9]*$/";
-                    break;
-                case "double":
-                    $regexp = "/^[0-9\.]*$/";
-                    break;
-                case "bool":
-                    $regexp = '/^[yes|no|0|1|true|false]$/i';
-                    break;
-                case "datetime":
-                    $regexp = "/^[0-9a-zA-Z -:]*$/";
-                    break;
-                default:
-                    $regexp = $type;
-                    break;
             }
-            if (!$regexp)
-                continue;
 
-            if (!preg_match($regexp, $value)) {
+            $valid = true;
+            if ($type == "text") {
+                continue;
+            } elseif ($type == "double") {
+                $valid = is_numeric($value);
+            } elseif ($type == "int") {
+                $valid = preg_match('/^-?([0-9])+$/i', $value);
+            } elseif ($type == "bool") {
+                $valid = is_bool($value);
+            } elseif ($type == "datetime") {
+                $valid = strtotime($value) !== false;
+            }
+
+            if (!$valid) {
                 $this->errors[] = Array($this->dbTable . "." . $key => "$type validation failed");
                 continue;
             }
