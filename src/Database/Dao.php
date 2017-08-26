@@ -51,31 +51,19 @@ abstract class Dao
      */
     private $dbClient;
     /**
-     * An array that holds object data
-     *
-     * @var array
-     */
-    public $data;
-    /**
-     * Flag to define is object is new or loaded from database
-     *
-     * @var boolean
-     */
-    public $isNew = true;
-    /**
      * Return type: 'Array' to return results as array, 'Object' as object
      * 'Json' as json string
      *
      * @var string
      */
-    public $returnType = 'Object';
+    public $returnType = 'Array';
     /**
      * An array that holds has* objects which should be loaded togeather with main
      * object togeather with main object
      *
      * @var string
      */
-    private $_with = Array();
+    private $_with = [];
     /**
      * Per page limit for pagination
      *
@@ -144,14 +132,10 @@ abstract class Dao
      * Dao constructor.
      * @throws \Exception
      */
-    public function __construct($data = null)
+    public function __construct()
     {
         if (empty ($this->dbTable)) {
             throw new \Exception("you must confirm table name.");
-        }
-
-        if ($data) {
-            $this->data = $data;
         }
 
         static::booting();
@@ -189,6 +173,19 @@ abstract class Dao
     {
         $name  = get_called_class();
         $event = "updated";
+        self::addHooks("model.{$name}.{$event}", $callback);
+    }
+
+    /**
+     * 注册删除后的回调
+     *
+     * @param  \Closure|string $callback
+     * @return void
+     */
+    public static function deleted($callback)
+    {
+        $name  = get_called_class();
+        $event = "deleted";
         self::addHooks("model.{$name}.{$event}", $callback);
     }
 
@@ -329,13 +326,29 @@ abstract class Dao
         return $this;
     }
 
+    private function where($whereProp, $whereValue = 'DBNULL', $operator = '=', $cond = 'AND')
+    {
+        if (is_array($whereProp)) {
+            foreach ($whereProp as $k => $v) {
+                $this->dbClient->where($k, $v, $operator, $cond);
+            }
+        } else {
+            $this->dbClient->where($whereProp, $whereValue, $operator, $cond);
+        }
+
+        return $this;
+    }
+
     /**
+     *
+     *
+     * @param $data
      * @return mixed 插入id or false in case of failure
      */
-    public function insert()
+    public function insert($data)
     {
         if (!empty ($this->timestamps) && in_array("created_at", $this->timestamps)) {
-            $this->created_at = date("Y-m-d H:i:s");
+            $data['created_at'] = date("Y-m-d H:i:s");
         }
 
         /**
@@ -343,23 +356,23 @@ abstract class Dao
          */
         $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
 
-        $sqlData = $this->prepareData();
+        /**
+         * 预备数据
+         */
+        $sqlData = $this->prepareData($data);
+        /**
+         * 校验数据
+         */
         if (!$this->validate($sqlData)) {
             return false;
         }
 
-        $id = $this->dbClient->insert($this->dbTable, $sqlData);
-        if (!empty ($this->primaryKey) && empty ($this->data[$this->primaryKey])) {
-            $this->data[$this->primaryKey] = $id;
-        }
-
-        $this->isNew = false;
-
-        return $id;
+        return $this->dbClient->insert($this->dbTable, $sqlData);
     }
 
     /**
-     * @param array $data Optional update data to apply to the object
+     * @param null $data Optional update data to apply to the object
+     * @return bool
      */
     public function update($data = null)
     {
@@ -367,33 +380,25 @@ abstract class Dao
             return false;
         }
 
-        if (empty ($this->data[$this->primaryKey])) {
+        if (!$data) {
             return false;
         }
 
-        if ($data) {
-            foreach ($data as $k => $v) {
-                $this->$k = $v;
-            }
+        if (!empty ($this->timestamps) && in_array("updated_at", $this->timestamps)) {
+            $data['updated_at'] = date("Y-m-d H:i:s");
         }
 
-        if (!empty ($this->timestamps) && in_array("updated_at", $this->timestamps)) {
-            $this->updated_at = date("Y-m-d H:i:s");
+        $sqlData = $this->prepareData($data);
+        if (!$this->validate($sqlData)) {
+            return false;
         }
 
         /**
          * 主库
          */
         $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
-
-        $sqlData = $this->prepareData();
-        if (!$this->validate($sqlData)) {
-            return false;
-        }
-
-        $this->getMysqlConnection()->where($this->primaryKey, $this->data[$this->primaryKey]);
-
-        $ret = $this->dbClient->update($this->dbTable, $sqlData);
+        $this->dbClient = $this->getMysqlConnection();
+        $ret            = $this->dbClient->update($this->dbTable, $sqlData);
 
         if ($ret) {
             $this->fireModelHook('updated');
@@ -403,46 +408,52 @@ abstract class Dao
     }
 
     /**
-     * Save or Update object
-     *
-     * @return mixed insert id or false in case of failure
-     */
-    public function save($data = null)
-    {
-        if ($this->isNew) {
-            return $this->insert();
-        }
-
-        return $this->update($data);
-    }
-
-    /**
      * Delete method. Works only if object primaryKey is defined
+     * 只允许使用id，删除
      *
+     * @param mixed $id 主id，主键只允许是int
      * @return boolean Indicates success. 0 or 1.
      */
-    public function delete()
+    public function delete(int $id)
     {
-        if (empty ($this->data[$this->primaryKey])) {
+        if (empty ($this->primaryKey)) {
             return false;
         }
 
-        $this->dbClient->where($this->primaryKey, $this->data[$this->primaryKey]);
+        if ($id <= 0) {
+            return false;
+        }
 
-        return $this->dbClient->delete($this->dbTable);
+        $this->dbClient->where($this->primaryKey, $id);
+        /**
+         * 主库
+         */
+        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
+        $this->dbClient = $this->getMysqlConnection();
+        $ret            = $this->dbClient->delete($this->dbTable);
+
+        if ($ret) {
+            $this->fireModelHook('deleted');
+        }
+
+        return $ret;
     }
 
     /**
      * 根据主键查找对象
      *
      * @access public
-     * @param $id string Primary Key
+     * @param $id int Primary Key
      * @param array|string $fields Array or coma separated list of fields to fetch
      *
-     * @return Dao
+     * @return array
      */
-    private function find($id)
+    private function find(int $id)
     {
+        if ($id <= 0) {
+            return null;
+        }
+
         $this->dbClient->where($this->dbTable . '.' . $this->primaryKey, $id);
 
         return $this->getOne();
@@ -453,22 +464,19 @@ abstract class Dao
      *
      * @access public
      *
-     * @return Dao
+     * @return array
      */
     protected function getOne()
     {
         $this->dbClient->setQueryChannel($this->channel);
         $results = $this->dbClient->arrayBuilder()->getOne($this->dbTable, $this->fields);
+        $this->_reset();
+
         if ($this->dbClient->count == 0) {
             return null;
         }
 
-        $this->processArrays($results);
-
-        $item        = new static($results);
-        $item->isNew = false;
-
-        return $item;
+        return $results;
     }
 
     /**
@@ -485,22 +493,13 @@ abstract class Dao
         $this->dbClient->setQueryChannel($this->channel);
 
         $results = $this->dbClient->arrayBuilder()->get($this->dbTable, $limit, $this->fields);
+        $this->_reset();
+
         if ($this->dbClient->count == 0) {
             return null;
         }
 
-        $objects = [];
-        foreach ($results as &$r) {
-            $this->processArrays($r);
-            $this->data  = $r;
-            $item        = new static ($r);
-            $item->isNew = false;
-            $objects[]   = $item;
-        }
-
-        $this->_reset();
-
-        return $objects;
+        return $results;
     }
 
     /**
@@ -533,40 +532,13 @@ abstract class Dao
         $this->dbClient->pageLimit = $this->pageLimit;
         $res                       = $this->dbClient->paginate($this->dbTable, $page, $this->fields);
         self::$totalPages          = $this->dbClient->totalPages;
+
+        $this->_reset();
         if ($this->dbClient->count == 0) {
             return null;
         }
 
-        $objects = [];
-        foreach ($res as &$r) {
-            $this->processArrays($r);
-            $this->data  = $r;
-            $item        = new static ($r);
-            $item->isNew = false;
-            $objects[]   = $item;
-        }
-
-        $this->_reset();
-
-        return $objects;
-    }
-
-    /**
-     * @param array $data
-     */
-    private function processArrays(&$data)
-    {
-        if (isset ($this->jsonFields) && is_array($this->jsonFields)) {
-            foreach ($this->jsonFields as $key) {
-                $data[$key] = json_decode($data[$key]);
-            }
-        }
-
-        if (isset ($this->arrayFields) && is_array($this->arrayFields)) {
-            foreach ($this->arrayFields as $key) {
-                $data[$key] = explode("|", $data[$key]);
-            }
-        }
+        return $res;
     }
 
     /**
@@ -584,18 +556,23 @@ abstract class Dao
         foreach ($this->dbFields as $key => $desc) {
             $type     = null;
             $required = false;
-            if (isset ($data[$key]))
+            if (isset ($data[$key])) {
                 $value = $data[$key];
-            else
+            } else {
                 $value = null;
+            }
 
-            if (is_array($value))
+            if (is_array($value)) {
                 continue;
+            }
 
-            if (isset ($desc[0]))
+            if (isset ($desc[0])) {
                 $type = $desc[0];
-            if (isset ($desc[1]) && ($desc[1] == 'required'))
+            }
+
+            if (isset ($desc[1]) && ($desc[1] == 'required')) {
                 $required = true;
+            }
 
             if ($required && strlen($value) == 0) {
                 $this->errors[] = Array($this->dbTable . "." . $key => "is required");
@@ -627,44 +604,33 @@ abstract class Dao
         return !count($this->errors) > 0;
     }
 
-    private function prepareData()
+    /**
+     * 准备数据
+     *
+     * @param $data
+     * @return array
+     */
+    private function prepareData($data)
     {
         $this->errors = [];
         $sqlData      = [];
-        if (count($this->data) == 0)
+        if (count($data) == 0) {
             return [];
-
-        if (method_exists($this, "preLoad")) {
-            $this->preLoad($this->data);
         }
 
         if (!$this->dbFields) {
-            return $this->data;
+            return $data;
         }
 
-        foreach ($this->data as $key => &$value) {
-            if ($value instanceof Dao && $value->isNew == true) {
-                $id = $value->save();
-                if ($id)
-                    $value = $id;
-                else
-                    $this->errors = array_merge($this->errors, $value->errors);
-            }
-
-            if (!in_array($key, array_keys($this->dbFields)))
+        foreach ($data as $key => $value) {
+            if (!array_key_exists($key, $this->dbFields)) {
                 continue;
+            }
 
             if (!is_array($value)) {
                 $sqlData[$key] = $value;
                 continue;
             }
-
-            if (isset ($this->jsonFields) && in_array($key, $this->jsonFields))
-                $sqlData[$key] = json_encode($value);
-            else if (isset ($this->arrayFields) && in_array($key, $this->arrayFields))
-                $sqlData[$key] = implode("|", $value);
-            else
-                $sqlData[$key] = $value;
         }
 
         return $sqlData;
@@ -710,42 +676,6 @@ abstract class Dao
         }
 
         return $obj;
-    }
-
-    /**
-     * Converts object data to an associative array.
-     *
-     * @return array Converted data
-     */
-    public function toArray()
-    {
-        $data = $this->data;
-        foreach ($data as &$d) {
-            if ($d instanceof Dao)
-                $d = $d->data;
-        }
-
-        return $data;
-    }
-
-    /**
-     * Converts object data to a JSON string.
-     *
-     * @return string Converted data
-     */
-    public function toJson()
-    {
-        return json_encode($this->toArray());
-    }
-
-    /**
-     * Converts object data to a JSON string.
-     *
-     * @return string Converted data
-     */
-    public function __toString()
-    {
-        return $this->toJson();
     }
 
     /**
