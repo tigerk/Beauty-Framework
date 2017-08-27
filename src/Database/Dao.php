@@ -58,13 +58,6 @@ abstract class Dao
      */
     public $returnType = 'Array';
     /**
-     * An array that holds has* objects which should be loaded togeather with main
-     * object togeather with main object
-     *
-     * @var string
-     */
-    private $_with = [];
-    /**
      * Per page limit for pagination
      *
      * @var int
@@ -90,7 +83,6 @@ abstract class Dao
      * @var string
      */
     protected $primaryKey = 'id';
-
     /**
      * Table name for an object. Class name will be used by default
      *
@@ -104,21 +96,18 @@ abstract class Dao
      * @var string
      */
     protected $connection = "default";
-
     /**
      * 当前链接数据库的渠道, master or slave
      *
      * @var string
      */
     protected $channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
-
     /**
      * 查询字段，默认为所有字段
      *
      * @var string
      */
     protected $fields;
-
     /**
      * The hook event.
      *
@@ -687,6 +676,5 @@ abstract class Dao
     function _reset()
     {
         $this->fields = null;
-        $this->_with  = [];
     }
 }
