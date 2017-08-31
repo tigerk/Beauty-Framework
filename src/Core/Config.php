@@ -20,11 +20,15 @@ class Config implements \ArrayAccess
      */
     protected $items = array();
 
+    /**
+     * 初始化config路径
+     *
+     * Config constructor.
+     */
     public function __construct()
     {
         $this->path = config_path();
     }
-
 
     /**
      * Get the returned value of a file.
@@ -43,6 +47,12 @@ class Config implements \ArrayAccess
         throw new FileNotFoundException("File does not exist at path {$path}");
     }
 
+    /**
+     * 是否有key值
+     *
+     * @param $key
+     * @return bool
+     */
     public function has($key)
     {
         return !is_null($this->get($key));

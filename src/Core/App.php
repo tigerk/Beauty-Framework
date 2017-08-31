@@ -108,6 +108,13 @@ class App
 
     /**
      * Dispatch request and build response
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Closure|null
+     * @throws FilterException
+     * @throws RouteNotFoundException
+     * @throws \Exception
      */
     protected function dispatchRequest(Request $request, Response $response)
     {
@@ -176,6 +183,11 @@ class App
         throw new MethodNotFoundException('method not found!');
     }
 
+    /**
+     * 设置App instance
+     *
+     * @param $ins
+     */
     public function instance($ins)
     {
         if (!isset(self::$_instance)) {

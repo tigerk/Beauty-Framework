@@ -20,15 +20,39 @@ class Request
      */
     protected $paths;
 
+    /**
+     * 环境对象
+     *
+     * @var Environment
+     */
     protected $env;
 
+    /**
+     * pathinfo
+     *
+     * @var
+     */
     protected $segments;
 
+    /**
+     * 请求body
+     *
+     * @var
+     */
     protected $body;
 
-    protected $parameters;
-
+    /**
+     * 保存get请求参数
+     *
+     * @var
+     */
     protected $getParameters;
+
+    /**
+     * 保存post请求参数
+     *
+     * @var
+     */
     protected $postParameters;
 
     public function __construct(Environment $env)
@@ -50,6 +74,11 @@ class Request
         return $method;
     }
 
+    /**
+     * 获取pathinfo
+     *
+     * @return mixed
+     */
     public function getPathInfo()
     {
         $paths = $this->parsePaths();
@@ -88,6 +117,11 @@ class Request
         return $this->paths;
     }
 
+    /**
+     * 解析url片段
+     *
+     * @return array
+     */
     protected function parseSegment()
     {
         $segments = explode('/', $this->getPathInfo());
@@ -99,6 +133,11 @@ class Request
         return $this->segments;
     }
 
+    /**
+     * 获取url所有片段
+     *
+     * @return array
+     */
     public function segments()
     {
         if (!is_null($this->segments)) {
@@ -108,6 +147,13 @@ class Request
         return $this->parseSegment();
     }
 
+    /**
+     * 根据偏移量获取片段，没有返回默认值
+     *
+     * @param $index
+     * @param null $default
+     * @return mixed|null
+     */
     public function segment($index, $default = null)
     {
         $segments = $this->segments();
@@ -134,6 +180,11 @@ class Request
         return $this->body;
     }
 
+    /**
+     * 获取所有的post请求数据
+     *
+     * @return mixed
+     */
     public function posts()
     {
         if (null === $this->postParameters) {

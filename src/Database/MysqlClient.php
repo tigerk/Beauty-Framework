@@ -521,7 +521,7 @@ class MysqlClient
      *
      * @param string|array $options The optons name of the query.
      *
-     * @throws Exception
+     * @throws \Exception
      * @return MysqlClient
      */
     public function setQueryOption($options)
@@ -539,7 +539,7 @@ class MysqlClient
         foreach ($options as $option) {
             $option = strtoupper($option);
             if (!in_array($option, $allowedOptions)) {
-                throw new Exception('Wrong query option: ' . $option);
+                throw new \Exception('Wrong query option: ' . $option);
             }
 
             if ($option == 'MYSQLI_NESTJOIN') {
@@ -576,7 +576,7 @@ class MysqlClient
      *                               or only $count
      * @param string $columns Desired columns
      *
-     * @return array Contains the returned rows from the select query.
+     * @return MysqlClient Contains the returned rows from the select query.
      */
     public function get($tableName, $numRows = null, $columns = '*')
     {
@@ -741,7 +741,7 @@ class MysqlClient
      *
      * @param string $tableName The name of the database table to work with.
      *
-     * @return array Contains the returned rows from the select query.
+     * @return bool Contains the returned rows from the select query.
      */
     public function has($tableName)
     {
@@ -762,7 +762,7 @@ class MysqlClient
     public function update($tableName, $tableData, $numRows = null)
     {
         if ($this->isSubQuery) {
-            return;
+            return false;
         }
 
         $this->_query = "UPDATE " . self::$prefix . $tableName;
@@ -789,7 +789,7 @@ class MysqlClient
     public function delete($tableName, $numRows = null)
     {
         if ($this->isSubQuery) {
-            return;
+            return false;
         }
 
         $table = self::$prefix . $tableName;
@@ -925,7 +925,7 @@ class MysqlClient
      * @param string $joinCondition the condition.
      * @param string $joinType 'LEFT', 'INNER' etc.
      *
-     * @throws Exception
+     * @throws \Exception
      * @return MysqlClient
      */
     public function join($joinTable, $joinCondition, $joinType = '')
@@ -961,9 +961,7 @@ class MysqlClient
         // We have to check if the file exists
         if (!file_exists($importFile)) {
             // Throw an exception
-            throw new Exception("importCSV -> importFile " . $importFile . " does not exists!");
-
-            return;
+            throw new \Exception("importCSV -> importFile " . $importFile . " does not exists!");
         }
 
         // Define the default values
@@ -1025,9 +1023,7 @@ class MysqlClient
         // We have to check if the file exists
         if (!file_exists($importFile)) {
             // Does not exists
-            throw new Exception("loadXml: Import file does not exists");
-
-            return;
+            throw new \Exception("loadXml: Import file does not exists");
         }
 
         // Create default values
@@ -1073,7 +1069,7 @@ class MysqlClient
      * @param string $orderByDirection Order direction.
      * @param mixed $customFieldsOrRegExp Array with fieldset for ORDER BY FIELD() ordering or string with regular expresion for ORDER BY REGEXP ordering
      *
-     * @throws Exception
+     * @throws \Exception
      * @return MysqlClient
      */
     public function orderBy($orderByField, $orderbyDirection = "DESC", $customFieldsOrRegExp = null)
@@ -1089,7 +1085,7 @@ class MysqlClient
 
 
         if (empty($orderbyDirection) || !in_array($orderbyDirection, $allowedDirection)) {
-            throw new Exception('Wrong order direction: ' . $orderbyDirection);
+            throw new \Exception('Wrong order direction: ' . $orderbyDirection);
         }
 
         if (is_array($customFieldsOrRegExp)) {
@@ -1100,7 +1096,7 @@ class MysqlClient
         } elseif (is_string($customFieldsOrRegExp)) {
             $orderByField = $orderByField . " REGEXP '" . $customFieldsOrRegExp . "'";
         } elseif ($customFieldsOrRegExp !== null) {
-            throw new Exception('Wrong custom field or Regular Expression: ' . $customFieldsOrRegExp);
+            throw new \Exception('Wrong custom field or Regular Expression: ' . $customFieldsOrRegExp);
         }
 
         $this->_orderBy[$orderByField] = $orderbyDirection;
@@ -1133,7 +1129,7 @@ class MysqlClient
      * @author Jonas Barascu
      * @param  string $method The table lock method. Can be READ or WRITE.
      *
-     * @throws Exception
+     * @throws \Exception
      * @return MysqlClient
      */
     public function setLockMethod($method)
@@ -1147,7 +1143,7 @@ class MysqlClient
                 break;
             default:
                 // Else throw an exception
-                throw new Exception("Bad lock type: Can be either READ or WRITE");
+                throw new \Exception("Bad lock type: Can be either READ or WRITE");
                 break;
         }
 
@@ -1158,10 +1154,10 @@ class MysqlClient
      * Locks a table for R/W action.
      *
      * @author Jonas Barascu
-     * @param string $table The table to be locked. Can be a table or a view.
+     * @param string/array $table The table to be locked. Can be a table or a view.
      *
-     * @throws Exception
-     * @return MysqlClient if succeeeded;
+     * @throws \Exception
+     * @return bool
      */
     public function lock($table)
     {
@@ -1201,11 +1197,8 @@ class MysqlClient
             return true;
         } // Something went wrong
         else {
-            throw new Exception("Locking of table " . $table . " failed", $errno);
+            throw new \Exception("Locking of table " . $table . " failed", $errno);
         }
-
-        // Return the success value
-        return false;
     }
 
     /**
@@ -1233,12 +1226,8 @@ class MysqlClient
             return $this;
         } // Something went wrong
         else {
-            throw new Exception("Unlocking of tables failed", $errno);
+            throw new \Exception("Unlocking of tables failed", $errno);
         }
-
-
-        // Return self
-        return $this;
     }
 
 
@@ -1315,7 +1304,7 @@ class MysqlClient
     /**
      * Helper function to add variables into bind parameters array
      *
-     * @param string Variable value
+     * @param $value
      */
     protected function _bindParam($value)
     {
@@ -1371,7 +1360,7 @@ class MysqlClient
     private function _buildInsert($tableName, $insertData, $operation)
     {
         if ($this->isSubQuery) {
-            return;
+            return false;
         }
 
         $this->_query     = $operation . " " . implode(' ', $this->_queryOptions) . " INTO " . self::$prefix . $tableName;
@@ -1408,7 +1397,7 @@ class MysqlClient
      *                               or only $count
      * @param array $tableData Should contain an array of data for updating the database.
      *
-     * @return mysqli_stmt Returns the $stmt object.
+     * @return \mysqli_stmt Returns the $stmt object.
      */
     protected function _buildQuery($numRows = null, $tableData = null)
     {
@@ -1450,7 +1439,7 @@ class MysqlClient
      * This helper method takes care of prepared statements' "bind_result method
      * , when the number of variables to pass is unknown.
      *
-     * @param mysqli_stmt $stmt Equal to the prepared statement object.
+     * @param \mysqli_stmt $stmt Equal to the prepared statement object.
      *
      * @return array The results of the SQL fetch.
      */
@@ -1819,7 +1808,7 @@ class MysqlClient
     /**
      * Method attempts to prepare the SQL query
      * and throws an error if there was a problem.
-     * @return mysqli_stmt
+     * @return \mysqli_stmt
      * @throws \Exception
      */
     protected function _prepareQuery()
@@ -1985,7 +1974,7 @@ class MysqlClient
             }
 
             if (!in_array($type, array_keys($types))) {
-                throw new Exception("invalid interval type in '{$diff}'");
+                throw new \Exception("invalid interval type in '{$diff}'");
             }
 
             $func .= " " . $incr . " interval " . $items . " " . $types[$type] . " ";
@@ -2015,13 +2004,13 @@ class MysqlClient
      *
      * @param int $num increment by int or float. 1 by default
      *
-     * @throws Exception
+     * @throws \Exception
      * @return array
      */
     public function inc($num = 1)
     {
         if (!is_numeric($num)) {
-            throw new Exception('Argument supplied to inc must be a number');
+            throw new \Exception('Argument supplied to inc must be a number');
         }
 
         return array("[I]" => "+" . $num);
@@ -2037,7 +2026,7 @@ class MysqlClient
     public function dec($num = 1)
     {
         if (!is_numeric($num)) {
-            throw new Exception('Argument supplied to dec must be a number');
+            throw new \Exception('Argument supplied to dec must be a number');
         }
 
         return array("[I]" => "-" . $num);
@@ -2308,7 +2297,7 @@ class MysqlClient
     /**
      * Convert a condition and value into the sql string
      * @param  String $operator The where constraint operator
-     * @param  String $val The where constraint value
+     * @param  String/array $val The where constraint value
      */
     private function conditionToSql($operator, $val)
     {

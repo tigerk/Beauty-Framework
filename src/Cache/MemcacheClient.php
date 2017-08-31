@@ -19,23 +19,38 @@ class MemcacheClient
      */
     protected $prefix;
 
+    /**
+     * 缓存标签
+     *
+     * @var string
+     */
     protected $cacheTag;
 
     /**
+     * 哈希换对象
+     *
      * @var HashRing
      */
     private $hashring;
 
     /**
+     * 保存memcached连接
+     *
      * @var
      */
     private static $connections;
 
     /**
-     * @var
+     * 单例
+     *
+     * @var MemcacheClient
      */
     private static $_instance;
 
+    /**
+     * MemcacheClient constructor.
+     * 初始化memcached配置，生成哈希环对象
+     */
     function __construct()
     {
         $this->config   = App::config()->get('cache');
@@ -44,6 +59,11 @@ class MemcacheClient
         $this->hashring->add($this->config['memcached']['hosts']);
     }
 
+    /**
+     * 生成单例对象
+     *
+     * @return MemcacheClient
+     */
     public static function getInstance()
     {
         if (self::$_instance == NULL) {
@@ -102,6 +122,12 @@ class MemcacheClient
         }
     }
 
+    /**
+     * 设置tag标签
+     *
+     * @param $key
+     * @return $this
+     */
     public function tags($key)
     {
         $this->cacheTag = $key;
@@ -225,6 +251,11 @@ class MemcacheClient
         $this->connect($key)->delete($this->prefix . $key);
     }
 
+    /**
+     * 根据tag清除掉缓存
+     *
+     * @param $tag
+     */
     public function clearTag($tag)
     {
         $tagkeys = $this->get($tag);
