@@ -24,6 +24,13 @@ class Request
 
     protected $segments;
 
+    protected $body;
+
+    protected $parameters;
+
+    protected $getParameters;
+    protected $postParameters;
+
     public function __construct(Environment $env)
     {
         $this->env = $env;
@@ -110,5 +117,68 @@ class Request
         }
 
         return $default;
+    }
+
+    /**
+     * Gets the request body
+     *
+     * @return string
+     */
+    public function body()
+    {
+        // Only get it once
+        if (null === $this->body) {
+            $this->body = @file_get_contents('php://input');
+        }
+
+        return $this->body;
+    }
+
+    public function posts()
+    {
+        if (null === $this->postParameters) {
+            $this->postParameters = $_POST;
+        }
+
+        return $this->postParameters;
+    }
+
+    /**
+     * Return a request parameter, or $default if it doesn't exist
+     *
+     * @param string $key The name of the parameter to return
+     * @param mixed $default The default value of the parameter if it contains no value
+     * @return mixed
+     */
+    public function post($key, $default = null)
+    {
+        // Get all of our request params
+        $params = $this->posts();
+
+        return isset($params[$key]) ? $params[$key] : $default;
+    }
+
+    public function gets()
+    {
+        if (null === $this->getParameters) {
+            $this->getParameters = $_GET;
+        }
+
+        return $this->getParameters;
+    }
+
+    /**
+     * Return a request parameter, or $default if it doesn't exist
+     *
+     * @param string $key The name of the parameter to return
+     * @param mixed $default The default value of the parameter if it contains no value
+     * @return mixed
+     */
+    public function get($key, $default = null)
+    {
+        // Get all of our request params
+        $params = $this->gets();
+
+        return isset($params[$key]) ? $params[$key] : $default;
     }
 }
