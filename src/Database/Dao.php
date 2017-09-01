@@ -446,7 +446,7 @@ abstract class Dao
     private function find(int $id)
     {
         if ($id <= 0) {
-            return null;
+            return [];
         }
 
         $this->dbClient->where($this->dbTable . '.' . $this->primaryKey, $id);
@@ -468,7 +468,7 @@ abstract class Dao
         $this->_reset();
 
         if ($this->dbClient->count == 0) {
-            return null;
+            return [];
         }
 
         return $results;
@@ -481,7 +481,7 @@ abstract class Dao
      * @param integer|array $limit Array to define SQL limit in format Array ($count, $offset)
      *                             or only $count
      *
-     * @return array Array of Clients
+     * @return mixed Array of Clients
      */
     protected function get($limit = null)
     {
@@ -491,7 +491,7 @@ abstract class Dao
         $this->_reset();
 
         if ($this->dbClient->count == 0) {
-            return null;
+            return [];
         }
 
         return $results;
