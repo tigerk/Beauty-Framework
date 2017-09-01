@@ -193,10 +193,10 @@ abstract class Dao
      * 启动该模型的钩子
      *
      * @param  string $event
-     * @param  bool $halt
+     * @param  array $data
      * @return mixed
      */
-    protected function fireModelHook($event)
+    protected function fireModelHook($event, $data = [])
     {
         if (!isset(self::$hooks)) {
             return true;
@@ -207,7 +207,7 @@ abstract class Dao
         // event set individually instead of catching event for all the models.
         $event = "model." . get_class($this) . ".{$event}";
 
-        return call_user_func_array(self::$hooks[$event], [$this]);
+        return call_user_func_array(self::$hooks[$event], [$data]);
     }
 
     /**
@@ -356,7 +356,13 @@ abstract class Dao
             return false;
         }
 
-        return $this->dbClient->insert($this->dbTable, $sqlData);
+        $ret = $this->dbClient->insert($this->dbTable, $sqlData);
+
+        if ($ret) {
+            $this->fireModelHook('created', $sqlData);
+        }
+
+        return $ret;
     }
 
     /**
@@ -390,7 +396,7 @@ abstract class Dao
         $ret            = $this->dbClient->update($this->dbTable, $sqlData);
 
         if ($ret) {
-            $this->fireModelHook('updated');
+            $this->fireModelHook('updated', $sqlData);
         }
 
         return $ret;
@@ -422,7 +428,7 @@ abstract class Dao
         $ret            = $this->dbClient->delete($this->dbTable);
 
         if ($ret) {
-            $this->fireModelHook('deleted');
+            $this->fireModelHook('deleted', [$id]);
         }
 
         return $ret;
