@@ -765,6 +765,10 @@ class MysqlClient
             return false;
         }
 
+        if (empty($this->_where)) {
+            return false;
+        }
+
         $this->_query = "UPDATE " . self::$prefix . $tableName;
 
         $stmt   = $this->_buildQuery($numRows, $tableData);
