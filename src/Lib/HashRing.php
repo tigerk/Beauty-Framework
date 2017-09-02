@@ -57,7 +57,7 @@ class HashRing
      * hash环节点数, 2 的幂数 (在使用 DISTRIBUTION_CONSISTENT 算法时使用)
      * @var int
      */
-    private static $consistentBuckets = 64;
+    private static $consistentBuckets = 1024;
 
     /**
      * php 支持的 hash 函数 (用于判断是否支持 fnv 算法, php5.4 以后才内置了 fnv 算法)
