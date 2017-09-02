@@ -16,9 +16,28 @@ class RedisClient
      *
      * @var string
      */
-    protected      $prefix;
-    private        $hashring;
+    protected $prefix;
+
+    /**
+     * 哈希换对象
+     *
+     * @var HashRing
+     */
+    private $hashring;
+
+    /**
+     * 保存redis connection
+     *
+     * @var
+     */
     private static $connections;
+
+    /**
+     * 单例
+     *
+     * @var MemcacheClient
+     */
+    private static $_instance;
 
     function __construct($config = "redis")
     {
@@ -26,6 +45,20 @@ class RedisClient
         $this->prefix   = $this->config[$config]['prefix'];
         $this->hashring = new HashRing();
         $this->hashring->add($this->config[$config]['hosts']);
+    }
+
+    /**
+     * 生成单例对象
+     *
+     * @return MemcacheClient
+     */
+    public static function getInstance()
+    {
+        if (self::$_instance == NULL) {
+            self::$_instance = new RedisClient();
+        }
+
+        return self::$_instance;
     }
 
     /**
