@@ -54,8 +54,10 @@ class RedisClient
             return self::$connections[$server];
         }
 
+        list($host, $port) = explode(":", $server);
+
         $lobjredis = new \Redis();
-        $status    = $lobjredis->connect($server['host'], $server['port']);
+        $status    = $lobjredis->connect($host, $port);
 
         // check memcache connection
         if ($status === false) {
@@ -75,5 +77,30 @@ class RedisClient
     public function getPrefix()
     {
         return $this->prefix;
+    }
+
+    /**
+     *
+     *
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments)
+    {
+        $server = $this->connect($arguments[0]);
+
+        return call_user_func_array([$server, $name], $arguments);
+    }
+
+    public function __destruct()
+    {
+        foreach (self::$connections as $conn) {
+            if (!empty($conn)) {
+                $conn->close();
+            }
+        }
+
+        self::$connections = NULL;
     }
 }
