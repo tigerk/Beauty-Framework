@@ -32,33 +32,12 @@ class RedisClient
      */
     private static $connections;
 
-    /**
-     * 单例
-     *
-     * @var MemcacheClient
-     */
-    private static $_instance;
-
     function __construct($config = "redis")
     {
         $this->config   = App::config()->get('cache');
         $this->prefix   = $this->config[$config]['prefix'];
         $this->hashring = new HashRing();
         $this->hashring->add($this->config[$config]['hosts']);
-    }
-
-    /**
-     * 生成单例对象
-     *
-     * @return RedisClient
-     */
-    public static function getInstance()
-    {
-        if (self::$_instance == NULL) {
-            self::$_instance = new RedisClient();
-        }
-
-        return self::$_instance;
     }
 
     /**
