@@ -51,12 +51,12 @@ class MemcacheClient
      * MemcacheClient constructor.
      * 初始化memcached配置，生成哈希环对象
      */
-    function __construct()
+    function __construct($config = "memcached")
     {
         $this->config   = App::config()->get('cache');
-        $this->prefix   = $this->config['memcached']['prefix'];
+        $this->prefix   = $this->config[$config]['prefix'];
         $this->hashring = new HashRing();
-        $this->hashring->add($this->config['memcached']['hosts']);
+        $this->hashring->add($this->config[$config]['hosts']);
     }
 
     /**
@@ -156,9 +156,9 @@ class MemcacheClient
     /**
      * Get an item from the cache, or store the default value.
      *
-     * @param  string  $key
-     * @param  \DateTime|int  $minutes
-     * @param  \Closure  $callback
+     * @param  string $key
+     * @param  \DateTime|int $minutes
+     * @param  \Closure $callback
      * @return mixed
      */
     public function remember($key, $minutes, \Closure $callback)
@@ -166,8 +166,7 @@ class MemcacheClient
         // If the item exists in the cache we will just return this immediately
         // otherwise we will execute the given Closure and cache the result
         // of that execution for the given number of minutes in storage.
-        if ( ! is_null($value = $this->get($key)))
-        {
+        if (!is_null($value = $this->get($key))) {
             return $value;
         }
 
@@ -187,7 +186,7 @@ class MemcacheClient
         if ($this->cacheTag) {
 
             // First get the tags
-            $siteTags = $this->get($this->cacheTag);
+            $siteTags = $this->get($this->cacheTag, []);
 
             if (!in_array($key, $siteTags)) {
                 $siteTags[] = $key;

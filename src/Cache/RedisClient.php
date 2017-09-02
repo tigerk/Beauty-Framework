@@ -20,12 +20,12 @@ class RedisClient
     private        $hashring;
     private static $connections;
 
-    function __construct()
+    function __construct($config = "redis")
     {
         $this->config   = App::config()->get('cache');
-        $this->prefix   = $this->config['redis']['prefix'];
+        $this->prefix   = $this->config[$config]['prefix'];
         $this->hashring = new HashRing();
-        $this->hashring->add($this->config['redis']['hosts']);
+        $this->hashring->add($this->config[$config]['hosts']);
     }
 
     /**
