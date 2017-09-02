@@ -50,7 +50,7 @@ class RedisClient
     /**
      * 生成单例对象
      *
-     * @return MemcacheClient
+     * @return RedisClient
      */
     public static function getInstance()
     {
