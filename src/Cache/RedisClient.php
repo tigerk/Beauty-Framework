@@ -46,7 +46,7 @@ class RedisClient
      * @param $key
      * @return mixed
      */
-    public function connect($key)
+    private function connect($key)
     {
         $server = $this->hashring->get($key);
 
