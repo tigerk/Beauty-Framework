@@ -95,9 +95,11 @@ class RedisClient
 
     public function __destruct()
     {
-        foreach (self::$connections as $conn) {
-            if (!empty($conn)) {
-                $conn->close();
+        if (is_array(self::$connections)) {
+            foreach (self::$connections as $conn) {
+                if (!empty($conn)) {
+                    $conn->close();
+                }
             }
         }
 
