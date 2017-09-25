@@ -50,8 +50,7 @@ class MysqlConnector
             throw new \Exception('Connection profile not set');
         }
 
-        $index   = array_rand($this->connectionsSettings[$connectionName][$channel]);
-        $params  = $this->connectionsSettings[$connectionName][$channel][$index];
+        $params  = $this->serverPopulate($this->connectionsSettings[$connectionName][$channel]);
         $charset = $params['charset'];
 
         if (empty($params['host'])) {
@@ -88,5 +87,27 @@ class MysqlConnector
         }
 
         self::$connections = null;
+    }
+
+    /**
+     * 用于计算链接的数据库权重
+     *
+     * @param $settings
+     * @return mixed
+     */
+    protected function serverPopulate($settings)
+    {
+        // 将所有 server 按照权重整理为一个数组
+        $bucket = [];
+        foreach ($settings as $server) {
+            $replicas = isset($server['weight']) ? $server['weight'] : 1;
+            for ($i = 0; $i < $replicas; $i++) {
+                $bucket[] = $server;
+            }
+        }
+
+        $rand = mt_rand(0, count($bucket) - 1);
+
+        return $bucket[$rand];
     }
 }
