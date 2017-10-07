@@ -631,6 +631,16 @@ abstract class Dao
         return $sqlData;
     }
 
+    public function getLastQuery()
+    {
+        return $this->dbClient->getLastQuery();
+    }
+
+    public function getLastError()
+    {
+        return $this->dbClient->getLastError();
+    }
+
     /**
      * Catches calls to undefined methods.
      *

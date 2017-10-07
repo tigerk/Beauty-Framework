@@ -1905,7 +1905,7 @@ class MysqlClient
      */
     public function getLastError()
     {
-        if (!isset($this->_mysqli[$this->defConnectionName])) {
+        if (!isset($this->_mysqli)) {
             return "mysqli is null";
         }
 
