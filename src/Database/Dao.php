@@ -129,7 +129,7 @@ abstract class Dao
 
         static::booting();
 
-        $this->dbClient = MysqlClient::getInstance($this->connection);
+        $this->dbClient = new MysqlClient($this->connection);
     }
 
     /**

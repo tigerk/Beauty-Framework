@@ -239,7 +239,7 @@ class MysqlClient
      * @param string $charset
      * @param string $socket
      */
-    public function __construct()
+    public function __construct($connectionName)
     {
         $isSubQuery = false;
 
@@ -249,19 +249,8 @@ class MysqlClient
             return;
         }
 
-        $this->connnector = new MysqlConnector();
-    }
-
-    /**
-     * Set the connection name to use in the next query
-     * @param string $name
-     * @return $this
-     */
-    public function setConnection($name)
-    {
-        $this->defConnectionName = $name;
-
-        return $this;
+        $this->defConnectionName = $connectionName;
+        $this->connnector        = new MysqlConnector();
     }
 
     /**
@@ -274,26 +263,6 @@ class MysqlClient
         $this->_mysqli = $this->connnector->connection($this->defConnectionName, $this->queryChannel);
 
         return $this->_mysqli;
-    }
-
-    /**
-     * A method of returning the static instance to allow access to the
-     * instantiated object from within another class.
-     * Inheriting this class would require reloading connection info.
-     *
-     * @uses $db = MySqliDb::getInstance();
-     *
-     * @return MysqlClient Returns the current instance.
-     */
-    public static function getInstance($connection)
-    {
-        if (self::$_instance == NULL) {
-            self::$_instance = new MysqlClient();
-        }
-
-        self::$_instance->setConnection($connection);
-
-        return self::$_instance;
     }
 
     public function setQueryChannel($channel)
@@ -331,6 +300,8 @@ class MysqlClient
         $this->_lastInsertId     = null;
         $this->_updateColumns    = null;
         $this->_mapKey           = null;
+        $this->defConnectionName = 'default';
+        $this->queryChannel      = "master";
 
         return $this;
     }
@@ -1158,7 +1129,7 @@ class MysqlClient
      * Locks a table for R/W action.
      *
      * @author Jonas Barascu
-     * @param string/array $table The table to be locked. Can be a table or a view.
+     * @param string /array $table The table to be locked. Can be a table or a view.
      *
      * @throws \Exception
      * @return bool
@@ -2301,7 +2272,7 @@ class MysqlClient
     /**
      * Convert a condition and value into the sql string
      * @param  String $operator The where constraint operator
-     * @param  String/array $val The where constraint value
+     * @param  String /array $val The where constraint value
      */
     private function conditionToSql($operator, $val)
     {
@@ -2338,5 +2309,3 @@ class MysqlClient
         }
     }
 }
-
-// END class
