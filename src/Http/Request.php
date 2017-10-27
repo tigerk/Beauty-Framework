@@ -158,8 +158,9 @@ class Request
     {
         $segments = $this->segments();
 
+        $index = $index - 1;
         if (array_key_exists($index, $segments)) {
-            return $segments[$index - 1];
+            return $segments[$index];
         }
 
         return $default;
