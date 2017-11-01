@@ -116,7 +116,7 @@ class HashRing
         }
 
         if (!$this->nodes) {
-            throw new EmptyRingException('Cannot initialize an empty hashring.');
+            throw new \Exception('Cannot initialize an empty hashring.');
         }
 
         $this->ring  = array();
