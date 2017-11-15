@@ -424,7 +424,7 @@ abstract class Dao
         /**
          * 主库
          */
-        $ret = $this->dbClient->delete($this->dbTable);
+        $ret = $this->dbClient->delete($this->dbTable, 1);
 
         if ($ret) {
             $this->fireModelHook('deleted', $id);
