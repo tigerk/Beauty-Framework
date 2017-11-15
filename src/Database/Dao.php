@@ -215,7 +215,7 @@ abstract class Dao
      */
     public function getMysqlConnection()
     {
-        $this->dbClient = MysqlClient::getInstance($this->connection);
+        $this->dbClient = new MysqlClient($this->connection);
 
         return $this->dbClient;
     }
@@ -418,14 +418,13 @@ abstract class Dao
         if ($id <= 0) {
             return false;
         }
-
+        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
+        $this->dbClient = $this->getMysqlConnection();
         $this->dbClient->where($this->primaryKey, $id);
         /**
          * 主库
          */
-        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
-        $this->dbClient = $this->getMysqlConnection();
-        $ret            = $this->dbClient->delete($this->dbTable);
+        $ret = $this->dbClient->delete($this->dbTable);
 
         if ($ret) {
             $this->fireModelHook('deleted', $id);

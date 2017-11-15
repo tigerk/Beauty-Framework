@@ -767,6 +767,10 @@ class MysqlClient
             return false;
         }
 
+        if (empty($this->_where)) {
+            return false;
+        }
+
         $table = self::$prefix . $tableName;
 
         if (count($this->_join)) {
