@@ -210,7 +210,6 @@ class MemcacheClient
         $this->saveKey2Tag("increment", $this->prefix . $key);
 
         return $this->connect($key)->increment($this->prefix . $key, $value);
-
     }
 
     /**
@@ -236,7 +235,7 @@ class MemcacheClient
      */
     public function forever($key, $value)
     {
-        $this->connect($key)->put($key, $value, 0);
+        $this->put($key, $value, 0);
     }
 
     /**

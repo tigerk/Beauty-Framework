@@ -32,6 +32,13 @@ class RedisClient
      */
     private static $connections;
 
+    /**
+     * 缓存标签
+     *
+     * @var string
+     */
+    protected $cacheTag;
+
     function __construct($config = "redis")
     {
         $this->config   = App::config()->get('cache');
@@ -46,7 +53,7 @@ class RedisClient
      * @param $key
      * @return mixed
      */
-    private function connect($key)
+    public function connect($key)
     {
         $server = $this->hashring->get($key);
 
@@ -57,7 +64,7 @@ class RedisClient
         list($host, $port) = explode(":", $server);
 
         $lobjredis = new \Redis();
-        $status    = $lobjredis->connect($host, $port);
+        $status    = $lobjredis->pconnect($host, $port);
 
         // check memcache connection
         if ($status === false) {
@@ -80,7 +87,204 @@ class RedisClient
     }
 
     /**
+     * 设置tag标签
      *
+     * @param $key
+     * @return $this
+     */
+    public function tags($key)
+    {
+        $this->cacheTag = $key;
+
+        return $this;
+    }
+
+    /**
+     * Retrieve an item from the cache by key.
+     *
+     * @param  string $key
+     * @param  mixed $default
+     * @return mixed
+     */
+    public function get($key, $default = NULL)
+    {
+        $value = $this->connect($key)->get($this->prefix . $key);
+        if ($value === false) {
+            return $default instanceof \Closure ? $default() : $default;
+        } else {
+            return $this->unserialize($value);
+        }
+    }
+
+    /**
+     * Store an item in the cache for a given number of minutes.
+     *
+     * @param  string $key
+     * @param  mixed $value
+     * @param  int $seconds
+     * @return void
+     */
+    public function put($key, $value, $seconds = 0)
+    {
+        $data = $value instanceof \Closure ? $value() : $value;
+
+        $this->connect($key)->setEx($this->prefix . $key, (int)$seconds, $this->serialize($data));
+
+        $this->saveKey2Tag($this->prefix . $key);
+    }
+
+    /**
+     * Get an item from the cache, or store the default value.
+     *
+     * @param  string $key
+     * @param  \DateTime|int $seconds
+     * @param  \Closure $callback
+     * @return mixed
+     */
+    public function remember($key, $seconds, \Closure $callback)
+    {
+        // If the item exists in the cache we will just return this immediately
+        // otherwise we will execute the given Closure and cache the result
+        // of that execution for the given number of minutes in storage.
+        if (!is_null($value = $this->get($key))) {
+            return $value;
+        }
+
+        $this->put($key, $value = $callback(), $seconds);
+
+        return $value;
+    }
+
+    /**
+     * Get an item from the cache, or store the default value forever.
+     *
+     * @param  string $key
+     * @param  \Closure $callback
+     * @return mixed
+     */
+    public function rememberForever($key, \Closure $callback)
+    {
+        // If the item exists in the cache we will just return this immediately
+        // otherwise we will execute the given Closure and cache the result
+        // of that execution for the given number of minutes in storage.
+        if (!is_null($value = $this->get($key))) {
+            return $value;
+        }
+
+        $this->forever($key, $value = $callback());
+
+        return $value;
+    }
+
+    /**
+     * save key on tags
+     *
+     * @param $key
+     */
+    private function saveKey2Tag($key)
+    {
+        if ($this->cacheTag) {
+            // First get the tags
+            $siteTags = $this->get($this->cacheTag, []);
+
+            if (!in_array($key, $siteTags)) {
+                $siteTags[] = $key;
+            }
+
+            $this->forever($this->cacheTag, $siteTags);
+            $this->cacheTag = NULL;
+        }
+    }
+
+    /**
+     * Store an item in the cache indefinitely.
+     *
+     * @param  string $key
+     * @param  mixed $value
+     * @return void
+     */
+    public function forever($key, $value)
+    {
+        $this->connect($key)->set($this->prefix . $key, $this->serialize($value));
+    }
+
+    /**
+     * Remove an item from the cache.
+     *
+     * @param  string $key
+     * @return void
+     */
+    public function forget($key)
+    {
+        $this->connect($key)->delete($this->prefix . $key);
+    }
+
+    /**
+     * 根据tag清除掉缓存
+     *
+     * @param $tag
+     */
+    public function clearTag($tag)
+    {
+        $tagkeys = $this->get($tag, []);
+
+        foreach ($tagkeys as $key) {
+            $this->forget($key);
+        }
+
+        $this->forget($tag);
+
+        $this->cacheTag = NULL;
+    }
+
+    /**
+     * Serialize the value.
+     *
+     * @param  mixed $value
+     * @return mixed
+     */
+    protected function serialize($value)
+    {
+        return is_numeric($value) ? $value : serialize($value);
+    }
+
+    /**
+     * Unserialize the value.
+     *
+     * @param  mixed $value
+     * @return mixed
+     */
+    protected function unserialize($value)
+    {
+        return is_numeric($value) ? $value : unserialize($value);
+    }
+
+    /**
+     * Increment the value of an item in the cache.
+     *
+     * @param  string $key
+     * @param  mixed $value
+     * @return int
+     */
+    public function increment($key, $value = 1)
+    {
+        return $this->connect($key)->incrBy($this->prefix . $key, $value);
+    }
+
+    /**
+     * Decrement the value of an item in the cache.
+     *
+     * @param  string $key
+     * @param  mixed $value
+     * @return int
+     */
+    public function decrement($key, $value = 1)
+    {
+        return $this->connect($key)->decrBy($this->prefix . $key, $value);
+    }
+
+    /**
+     * 在对象中调用一个不可访问方法时，__call() 会被调用。
      *
      * @param $name
      * @param $arguments
