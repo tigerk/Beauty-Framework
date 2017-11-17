@@ -39,12 +39,32 @@ class RedisClient
      */
     protected $cacheTag;
 
+    /**
+     * 单例
+     */
+    private static $_instances;
+
     function __construct($config = "redis")
     {
         $this->config   = App::config()->get('cache');
         $this->prefix   = $this->config[$config]['prefix'];
         $this->hashring = new HashRing();
         $this->hashring->add($this->config[$config]['hosts']);
+    }
+
+    /**
+     * 默认走redis conf
+     *
+     * @param string $config
+     * @return RedisClient
+     */
+    public static function instance($config = "redis")
+    {
+        if (!isset(self::$_instances[$config]) || self::$_instances[$config] == NULL) {
+            self::$_instances[$config] = new RedisClient($config);
+        }
+
+        return self::$_instances[$config];
     }
 
     /**
