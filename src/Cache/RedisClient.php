@@ -150,7 +150,7 @@ class RedisClient
 
         $this->connect($key)->setEx($this->prefix . $key, (int)$seconds, $this->serialize($data));
 
-        $this->saveKey2Tag($this->prefix . $key);
+        $this->saveKey2Tag($key);
     }
 
     /**
