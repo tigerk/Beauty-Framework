@@ -8,10 +8,21 @@ use Beauty\Exception\FileNotFoundException;
  * 获取配置参数
  * @package Beauty
  */
-
 class Config implements \ArrayAccess
 {
+    /**
+     * config environment path
+     *
+     * @var string
+     */
     protected $path;
+
+    /**
+     * config root path
+     *
+     * @var string
+     */
+    protected $rootPath;
 
     /**
      * All of the configuration items.
@@ -27,7 +38,8 @@ class Config implements \ArrayAccess
      */
     public function __construct()
     {
-        $this->path = config_path();
+        $this->path     = config_path();
+        $this->rootPath = config_root_path();
     }
 
     /**
@@ -38,9 +50,11 @@ class Config implements \ArrayAccess
      *
      * @throws FileNotFoundException
      */
-    public function getRequire($path)
+    public function getRequire($file)
     {
-        if (is_file($path)) {
+        if (is_file($path = $this->path . "/" . $file)) {
+            return require $path;
+        } elseif (is_file($path = $this->rootPath . "/" . $file)) {
             return require $path;
         }
 
@@ -117,7 +131,7 @@ class Config implements \ArrayAccess
             return;
         }
 
-        $this->items[$group] = $this->getRequire($this->path . '/' . $group . '.php');
+        $this->items[$group] = $this->getRequire($group . '.php');
 
     }
 

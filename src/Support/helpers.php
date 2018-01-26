@@ -52,6 +52,18 @@ if (!function_exists('config_path')) {
     }
 }
 
+if (!function_exists('config_root_path')) {
+    /**
+     * 获取配置根目录
+     *
+     * @return string
+     */
+    function config_root_path()
+    {
+        return base_path() . "config";
+    }
+}
+
 if (!function_exists('environment')) {
     /**
      * 返回环境参数
