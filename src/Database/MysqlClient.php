@@ -300,8 +300,6 @@ class MysqlClient
         $this->_lastInsertId     = null;
         $this->_updateColumns    = null;
         $this->_mapKey           = null;
-        $this->defConnectionName = 'default';
-        $this->queryChannel      = "master";
 
         return $this;
     }
