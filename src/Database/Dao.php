@@ -95,7 +95,7 @@ abstract class Dao
      *
      * @var string
      */
-    protected $connection = "default";
+    protected $connection;
     /**
      * 当前链接数据库的渠道, master or slave
      *
@@ -129,7 +129,7 @@ abstract class Dao
 
         static::booting();
 
-        $this->dbClient = new MysqlClient($this->connection);
+        $this->dbClient = new MysqlClient($this->connection, $this->channel);
     }
 
     /**
@@ -198,26 +198,17 @@ abstract class Dao
      */
     protected function fireModelHook($event, $data = [])
     {
-        if (!isset(self::$hooks)) {
+        $event = "model." . get_class($this) . ".{$event}";
+
+        if (!isset(self::$hooks[$event])) {
             return true;
         }
 
         // We will append the names of the class to the event to distinguish it from
         // other model events that are fired, allowing us to listen on each model
         // event set individually instead of catching event for all the models.
-        $event = "model." . get_class($this) . ".{$event}";
 
         return call_user_func_array(self::$hooks[$event], [$data]);
-    }
-
-    /**
-     * get master db connection
-     */
-    public function getMysqlConnection()
-    {
-        $this->dbClient = new MysqlClient($this->connection);
-
-        return $this->dbClient;
     }
 
     /**
@@ -392,8 +383,7 @@ abstract class Dao
          * 主库
          */
         $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
-        $this->dbClient = $this->getMysqlConnection();
-        $ret            = $this->dbClient->update($this->dbTable, $sqlData);
+        $ret = $this->dbClient->update($this->dbTable, $sqlData);
 
         if ($ret) {
             $this->fireModelHook('updated', $sqlData);
@@ -419,7 +409,6 @@ abstract class Dao
             return false;
         }
         $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
-        $this->dbClient = $this->getMysqlConnection();
         $this->dbClient->where($this->primaryKey, $id);
         /**
          * 主库

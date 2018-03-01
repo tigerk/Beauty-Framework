@@ -219,38 +219,27 @@ class MysqlClient
     /**
      * @var string the name of a default (main) mysqli connection
      */
-    public $defConnectionName = 'default';
+    protected $defConnectionName;
 
-    public $queryChannel = "master";
+    protected $queryChannel;
 
     /**
      * 数据库连接器
      *
      * @var MysqlConnector
      */
-    public $connnector;
+    protected $connnector;
 
     /**
-     * @param string $host
-     * @param string $username
-     * @param string $password
-     * @param string $db
-     * @param int $port
-     * @param string $charset
-     * @param string $socket
+     * MysqlClient constructor.
+     * @param $connectionName
+     * @param $channel
      */
-    public function __construct($connectionName)
+    public function __construct($connectionName, $channel)
     {
-        $isSubQuery = false;
-
-        if ($isSubQuery) {
-            $this->isSubQuery = true;
-
-            return;
-        }
-
         $this->defConnectionName = $connectionName;
-        $this->connnector        = new MysqlConnector();
+        $this->queryChannel      = $channel;
+        $this->connnector        = new MysqlConnector($connectionName, $channel);
     }
 
     /**
@@ -283,23 +272,23 @@ class MysqlClient
             $this->trace[] = array($this->_lastQuery, (microtime(true) - $this->traceStartQ), $this->_traceGetCaller());
         }
 
-        $this->_where            = array();
-        $this->_having           = array();
-        $this->_join             = array();
-        $this->_joinAnd          = array();
-        $this->_orderBy          = array();
-        $this->_groupBy          = array();
-        $this->_bindParams       = array(''); // Create the empty 0 index
-        $this->_query            = null;
-        $this->_queryOptions     = array();
-        $this->returnType        = 'array';
-        $this->_nestJoin         = false;
-        $this->_forUpdate        = false;
-        $this->_lockInShareMode  = false;
-        $this->_tableName        = '';
-        $this->_lastInsertId     = null;
-        $this->_updateColumns    = null;
-        $this->_mapKey           = null;
+        $this->_where           = array();
+        $this->_having          = array();
+        $this->_join            = array();
+        $this->_joinAnd         = array();
+        $this->_orderBy         = array();
+        $this->_groupBy         = array();
+        $this->_bindParams      = array(''); // Create the empty 0 index
+        $this->_query           = null;
+        $this->_queryOptions    = array();
+        $this->returnType       = 'array';
+        $this->_nestJoin        = false;
+        $this->_forUpdate       = false;
+        $this->_lockInShareMode = false;
+        $this->_tableName       = '';
+        $this->_lastInsertId    = null;
+        $this->_updateColumns   = null;
+        $this->_mapKey          = null;
 
         return $this;
     }
