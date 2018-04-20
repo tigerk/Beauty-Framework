@@ -84,7 +84,7 @@ class RedisClient
         list($host, $port) = explode(":", $server);
 
         $lobjredis = new \Redis();
-        $status    = $lobjredis->pconnect($host, $port);
+        $status    = $lobjredis->connect($host, $port);
 
         // check memcache connection
         if ($status === false) {
