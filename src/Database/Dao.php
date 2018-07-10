@@ -293,6 +293,18 @@ abstract class Dao
         return $this;
     }
 
+    // 连接主库
+    public function onMasterConnection()
+    {
+        $this->channel = MysqlConnector::QUERY_MASTER_CHANNEL;
+    }
+
+    // 连接从库
+    public function onSlaveConnection()
+    {
+        $this->channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
+    }
+
     /**
      * 设置查询字段
      *
