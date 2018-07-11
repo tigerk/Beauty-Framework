@@ -297,12 +297,14 @@ abstract class Dao
     public function onMasterConnection()
     {
         $this->channel = MysqlConnector::QUERY_MASTER_CHANNEL;
+        return $this;
     }
 
     // 连接从库
     public function onSlaveConnection()
     {
         $this->channel = MysqlConnector::QUERY_SLAVE_CHANNEL;
+        return $this;
     }
 
     /**
