@@ -371,6 +371,40 @@ abstract class Dao
     }
 
     /**
+     * 批量插入数据
+     *
+     * @param $data
+     * @return array|bool
+     */
+    public function insertBatch($data)
+    {
+        /**
+         * 连接主库
+         */
+        $this->dbClient->setQueryChannel(MysqlConnector::QUERY_MASTER_CHANNEL);
+
+        $sqlData = [];
+        foreach ($data as &$item) {
+            /**
+             * 预备数据
+             */
+            $rowData = $this->prepareData($item);
+            /**
+             * 校验数据
+             */
+            if (!$this->validate($rowData)) {
+                return false;
+            }
+
+            $sqlData[] = $rowData;
+        }
+
+        $ret = $this->dbClient->insertMulti($this->dbTable, $sqlData);
+
+        return $ret;
+    }
+
+    /**
      * @param null $data Optional update data to apply to the object
      * @return bool
      */
