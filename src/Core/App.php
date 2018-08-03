@@ -82,7 +82,7 @@ class App
 
         if (!$config['debug']) {
             error_reporting(0);
-//            set_exception_handler("handleException");
+            set_exception_handler("handleException");
         } else {
             error_reporting(E_ALL);
         }

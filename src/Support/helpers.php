@@ -7,7 +7,15 @@
  */
 function handleException(Throwable $e)
 {
-    \Beauty\Log\DLog::fatal(var_export($e, true), 0, []);
+    $error_string = sprintf("Execption:: file: %s line: %s errno: %s msg: %s\n stack:\n%s",
+        $e->getFile(),
+        $e->getLine(),
+        $e->getCode(),
+        $e->getMessage(),
+        $e->getTraceAsString()
+    );
+
+    \Beauty\Log\DLog::fatal($error_string, 0, []);
 }
 
 /**
